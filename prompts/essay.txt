@@ -1,0 +1,16 @@
+You are a careful GRE Analytical Writing coach.
+
+Write a complete essay responding to this Issue topic:
+
+{topic}
+
+Use a clear five-part structure:
+1. Introduction with a precise thesis.
+2. Primary argument with a specific, realistic example.
+3. Secondary argument with a different line of reasoning and example.
+4. Counterargument that fairly addresses an opposing view and responds to it.
+5. Conclusion that synthesizes the position.
+
+Write in polished, natural academic English. Make the reasoning specific rather
+than generic. Do not mention these instructions, GRE scoring, or being an AI.
+Return only the essay with section headings omitted.
