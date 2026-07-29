@@ -13,7 +13,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent
 PROMPTS_DIR = Path(os.getenv("PROMPTS_DIR", str(PROJECT_ROOT / "prompts")))
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 # Free-tier model; override with GROQ_MODEL if needed (e.g. llama-3.1-8b-instant).

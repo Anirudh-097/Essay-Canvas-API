@@ -1,46 +1,39 @@
-# Backend
+# Essay Canvas API
 
-Run from the project root:
+FastAPI backend for essay generation, paragraph evaluation, authentication, and progress tracking.
+
+## Local development
 
 ```bash
-venv/bin/uvicorn backend.main:app --reload
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python auth.py  # generate an AUTH_PASSWORD_HASH, then put it in .env
+uvicorn main:app --reload
 ```
 
-The API uses `data/topics.db` by default. Available endpoints:
+The API is available at `http://localhost:8000`; interactive documentation is at `/docs`.
+
+The API uses Supabase PostgreSQL through `DATABASE_URL`. Run `supabase/schema.sql` in the Supabase SQL Editor, then import topics into the `topics` table before using the topic endpoints.
+
+## Configuration
+
+Required environment variables are `DATABASE_URL`, `AUTH_USERNAME`, `AUTH_PASSWORD_HASH`, `AUTH_SECRET`, and `GROQ_API_KEY`. `GROQ_MODEL` is optional. Set `FRONTEND_ORIGINS` to a comma-separated list of frontend URLs. For a Vercel frontend, use `AUTH_COOKIE_SECURE=true` and `AUTH_COOKIE_SAMESITE=none`.
+
+## Docker and Render
+
+```bash
+docker build -t essay-canvas-api .
+docker run --env-file .env -p 8000:8000 essay-canvas-api
+```
+
+The included `render.yaml` deploys the Docker service and uses `/health` for health checks. In Render, set `DATABASE_URL` to the Supabase pooled connection string, set `FRONTEND_ORIGINS` to the deployed Vercel URL, and provide `AUTH_PASSWORD_HASH` and `GROQ_API_KEY` as secrets. The frontend only needs the public Render API URL, for example `NEXT_PUBLIC_API_URL=https://your-api.onrender.com`.
+
+Endpoints include:
 
 - `GET /health`
-- `GET /topics?offset=0&limit=50`
-- `GET /topics/{topic_id}`
-- `GET /topic/today`
-- `POST /essay/generate` with `{"topic_id": 1}`
-- `GET /practice/prompt?exclude_topic_id=1`
-- `POST /evaluate` with a topic ID, paragraph type, and paragraph
-- `GET /progress` for attempt history and grammar, vocabulary, structure, and
-  argument-quality averages
-
-To enable the Groq-backed essay and evaluation endpoints locally, copy
-`.env.example` to `.env` and add your key from [console.groq.com](https://console.groq.com):
-
-```bash
-cp .env.example .env
-# edit .env and set GROQ_API_KEY
-venv/bin/uvicorn backend.main:app --reload
-```
-
-`GROQ_MODEL` is optional; the default is `llama-3.3-70b-versatile` (free tier).
-Other free-tier options include `llama-3.1-8b-instant` (faster, higher daily
-limits) and `openai/gpt-oss-20b`. The key is only read by the backend and is
-never sent to the frontend. The `.env` file is ignored by Git.
-
-For Docker, inject the same variables at runtime rather than copying `.env`
-into the image:
-
-```bash
-docker run --env-file .env -p 8000:8000 essay-learner-backend
-```
-
-With Docker Compose, use `env_file: .env` on the backend service. Hosted
-providers such as Render expose the same values as service environment
-variables or secrets.
-
-Interactive API documentation is available at `/docs` while the server is running.
+- `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`
+- `GET /topics`, `GET /topics/{topic_id}`, `GET /topic/today`
+- `POST /essay/generate`, `GET /practice/prompt`, `POST /evaluate`
+- `GET /progress`

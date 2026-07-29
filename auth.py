@@ -15,7 +15,7 @@ import time
 from dotenv import load_dotenv
 from fastapi import HTTPException, Request, status
 
-from .db import PROJECT_ROOT
+from db import PROJECT_ROOT
 
 load_dotenv(PROJECT_ROOT / ".env")
 
@@ -121,6 +121,11 @@ def require_auth(request: Request) -> str:
 
 def cookie_secure() -> bool:
     return os.getenv("AUTH_COOKIE_SECURE", "false").lower() in {"1", "true", "yes"}
+
+
+def cookie_samesite() -> str:
+    value = os.getenv("AUTH_COOKIE_SAMESITE", "lax").lower()
+    return value if value in {"lax", "strict", "none"} else "lax"
 
 
 def session_max_age() -> int:
