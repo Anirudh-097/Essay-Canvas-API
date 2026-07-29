@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
-import sqlite3
+import os
 from datetime import datetime
+from collections.abc import Mapping
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ValidationError
 
-from . import db
-from . import groq
-from .auth import (
+import db
+import groq
+from auth import (
     SESSION_COOKIE,
     authenticate,
     cookie_secure,
+    cookie_samesite,
     create_session,
     require_auth,
     session_max_age,
@@ -113,20 +115,23 @@ class LoginRequest(BaseModel):
 
 
 app = FastAPI(title="Essay Learner API", version="0.1.0")
-# Allow requests from your Next.js frontend running on localhost:3000
+frontend_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "FRONTEND_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+    ).split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=frontend_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-def serialize_topic(row: sqlite3.Row) -> Topic:
+def serialize_topic(row: Mapping[str, object]) -> Topic:
     return Topic(
         id=row["id"],
         topic=row["topic"],
@@ -150,7 +155,7 @@ def login(request: LoginRequest, response: Response) -> dict[str, str]:
         max_age=session_max_age(),
         httponly=True,
         secure=cookie_secure(),
-        samesite="lax",
+        samesite=cookie_samesite(),
         path="/",
     )
     return {"username": request.username}
