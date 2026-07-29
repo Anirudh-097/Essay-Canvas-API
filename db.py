@@ -30,10 +30,10 @@ def _get_pool() -> ConnectionPool[Connection[Any]]:
     if not database_url:
         raise RuntimeError("DATABASE_URL is not configured")
 
-    if _pool is None:
+    if _pool is None or _pool.closed:
         with _pool_lock:
-            if _pool is None:
-                _pool = ConnectionPool(
+            if _pool is None or _pool.closed:
+                pool = ConnectionPool(
                     conninfo=database_url,
                     # Supabase's transaction pooler does not preserve prepared
                     # statements between backend connections.
@@ -43,7 +43,13 @@ def _get_pool() -> ConnectionPool[Connection[Any]]:
                     timeout=10,
                     open=False,
                 )
-                _pool.open(wait=True)
+                try:
+                    pool.open(wait=True)
+                except Exception:
+                    pool.close()
+                    raise
+                _pool = pool
+                _schema_initialized = False
 
     if not _schema_initialized:
         with _pool_lock:
