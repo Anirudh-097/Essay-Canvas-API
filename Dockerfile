@@ -14,10 +14,7 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend application source code, data, and scripts
-COPY backend/ ./backend/
-COPY data/ ./data/
-COPY scripts/ ./scripts/
+# Copy backend prompts
 COPY prompts/ ./prompts/
 
 # Expose FastAPI backend port
