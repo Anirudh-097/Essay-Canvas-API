@@ -5,7 +5,7 @@ Issue topic:
 
 Paragraph role:
 {paragraph_type}
-Allowed values: introduction, primary argument, counter-argument, conclusion
+Allowed values: primary argument, counter-argument
 
 Student paragraph:
 {paragraph}
