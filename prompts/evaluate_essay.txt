@@ -85,7 +85,7 @@ Return ONLY valid JSON with exactly these keys:
     "brief concrete observation",
     "..."
   ],
-  "suggested_rewrite": "a polished rewrite preserving the student's core argument",
+  "suggested_rewrite": "a complete polished rewrite of approximately 450–600 words preserving the student's core argument, including an introduction, fully developed body paragraphs with specific support, and a conclusion",
   "better_vocabulary": [
     {{
       "word": "original common or repeated word",
@@ -109,6 +109,9 @@ Vocabulary Analysis Instructions:
 Quality control:
 - Do not invent facts about the student.
 - Do not assume missing examples exist.
+- The suggested_rewrite must be a complete essay of approximately 450–600 words, not a paragraph, outline, summary, or excerpt.
+- The suggested_rewrite must include a clear introduction, multiple developed body paragraphs, and a conclusion.
+- Preserve the student's central position and reasoning where possible, while repairing unsupported claims, weak organization, and language problems.
 - Do not be overly encouraging.
 - Be specific and critical.
 - A student should need genuine improvement to move from a 4 to a 5 or from a 5 to a 6.
