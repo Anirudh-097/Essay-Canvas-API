@@ -63,6 +63,11 @@ class EvaluationRequest(BaseModel):
     paragraph: str
 
 
+class FullEssayEvaluationRequest(BaseModel):
+    topic_id: int
+    essay: str = Field(min_length=1, max_length=20000)
+
+
 class VocabularySuggestion(BaseModel):
     word: str
     synonyms: list[str]
@@ -84,6 +89,11 @@ class Evaluation(BaseModel):
 class EvaluationResponse(BaseModel):
     topic: Topic
     paragraph_type: str
+    evaluation: Evaluation
+
+
+class FullEssayEvaluationResponse(BaseModel):
+    topic: Topic
     evaluation: Evaluation
 
 
@@ -270,6 +280,39 @@ def evaluate_paragraph(
     return EvaluationResponse(
         topic=topic, paragraph_type=request.paragraph_type, evaluation=evaluation
     )
+
+
+@app.post("/evaluate/essay", response_model=FullEssayEvaluationResponse)
+def evaluate_full_essay(
+    request: FullEssayEvaluationRequest, username: str = Depends(require_auth)
+) -> FullEssayEvaluationResponse:
+    essay = request.essay.strip()
+    if not essay:
+        raise HTTPException(status_code=422, detail="Essay cannot be empty")
+
+    topic = require_topic(request.topic_id)
+    try:
+        raw_evaluation = groq.complete_json(
+            "evaluate_essay.txt",
+            {"topic": topic.topic, "essay": essay},
+        )
+        evaluation = Evaluation.model_validate_json(raw_evaluation)
+    except groq.GroqError as error:
+        status = 503 if "not configured" in str(error) else 502
+        raise HTTPException(status_code=status, detail=str(error)) from error
+    except (ValidationError, ValueError) as error:
+        raise HTTPException(status_code=502, detail="Model returned invalid evaluation JSON") from error
+
+    db.save_attempt(
+        topic_id=topic.id,
+        paragraph_type="full-length essay",
+        score=evaluation.score,
+        grammar=evaluation.grammar,
+        vocabulary=evaluation.vocabulary,
+        structure=evaluation.structure,
+        argument_quality=evaluation.argument_quality,
+    )
+    return FullEssayEvaluationResponse(topic=topic, evaluation=evaluation)
 
 
 @app.get("/progress", response_model=ProgressResponse)
