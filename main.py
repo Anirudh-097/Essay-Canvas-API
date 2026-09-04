@@ -240,7 +240,7 @@ def practice_prompt(
     import random
 
     return PracticePrompt(
-        topic=serialize_topic(row), paragraph_type=random.choice(PARAGRAPH_TYPES)
+        topic=serialize_topic(row), paragraph_type=random.choice(PARAGRAPH_TYPES[1:-1])
     )
 
 
