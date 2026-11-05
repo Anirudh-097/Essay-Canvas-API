@@ -15,20 +15,12 @@ import groq
 from auth import (
     SESSION_COOKIE,
     authenticate,
-    cookie_secure,
-    cookie_samesite,
-    create_session,
     require_auth,
-    session_max_age,
+    set_session_cookie,
 )
 
 
-PARAGRAPH_TYPES = (
-    "introduction",
-    "primary argument",
-    "counter-argument",
-    "conclusion",
-)
+PARAGRAPH_TYPES = ("primary argument",)
 
 
 class Topic(BaseModel):
@@ -159,15 +151,7 @@ def health() -> dict[str, str]:
 def login(request: LoginRequest, response: Response) -> dict[str, str]:
     if not authenticate(request.username, request.password):
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    response.set_cookie(
-        SESSION_COOKIE,
-        create_session(request.username),
-        max_age=session_max_age(),
-        httponly=True,
-        secure=cookie_secure(),
-        samesite=cookie_samesite(),
-        path="/",
-    )
+    set_session_cookie(response, request.username)
     return {"username": request.username}
 
 
@@ -211,6 +195,17 @@ def topic_today(username: str = Depends(require_auth)) -> Topic:
     return serialize_topic(row)
 
 
+@app.get("/topic/random", response_model=Topic)
+def topic_random(
+    exclude_topic_id: int | None = Query(None, ge=1),
+    username: str = Depends(require_auth),
+) -> Topic:
+    row = db.get_random_topic(exclude_topic_id=exclude_topic_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="No topics have been imported")
+    return serialize_topic(row)
+
+
 def require_topic(topic_id: int) -> Topic:
     row = db.get_topic(topic_id=topic_id)
     if row is None:
@@ -237,10 +232,8 @@ def practice_prompt(
     row = db.get_random_practice_topic(exclude_topic_id=exclude_topic_id)
     if row is None:
         raise HTTPException(status_code=404, detail="No practice topics have been imported")
-    import random
-
     return PracticePrompt(
-        topic=serialize_topic(row), paragraph_type=random.choice(PARAGRAPH_TYPES[1:-1])
+        topic=serialize_topic(row), paragraph_type=PARAGRAPH_TYPES[0]
     )
 
 
@@ -249,7 +242,7 @@ def evaluate_paragraph(
     request: EvaluationRequest, username: str = Depends(require_auth)
 ) -> EvaluationResponse:
     if request.paragraph_type not in PARAGRAPH_TYPES:
-        raise HTTPException(status_code=422, detail="Unknown paragraph type")
+        raise HTTPException(status_code=422, detail="Only primary argument practice is supported")
     if not request.paragraph.strip():
         raise HTTPException(status_code=422, detail="Paragraph cannot be empty")
     topic = require_topic(request.topic_id)

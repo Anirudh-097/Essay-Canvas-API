@@ -13,7 +13,7 @@ import secrets
 import time
 
 from dotenv import load_dotenv
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request, Response, status
 
 from db import PROJECT_ROOT
 
@@ -108,7 +108,19 @@ def authenticate(username: str, password: str) -> bool:
     )
 
 
-def require_auth(request: Request) -> str:
+def set_session_cookie(response: Response, username: str) -> None:
+    response.set_cookie(
+        SESSION_COOKIE,
+        create_session(username),
+        max_age=session_max_age(),
+        httponly=True,
+        secure=cookie_secure(),
+        samesite=cookie_samesite(),
+        path="/",
+    )
+
+
+def require_auth(request: Request, response: Response) -> str:
     username = _session_username(request.cookies.get(SESSION_COOKIE))
     if username != _configured_username():
         raise HTTPException(
@@ -116,6 +128,9 @@ def require_auth(request: Request) -> str:
             detail="Authentication required",
             headers={"WWW-Authenticate": "Cookie"},
         )
+    # Make the session sliding: any authenticated request keeps the browser
+    # session alive for another configured session period.
+    set_session_cookie(response, username)
     return username
 
 
