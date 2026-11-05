@@ -90,6 +90,19 @@ def get_topic(topic_id: int = 0) -> dict[str, Any] | None:
         ).fetchone()
 
 
+def get_random_topic(exclude_topic_id: int | None = None) -> dict[str, Any] | None:
+    with connect() as connection:
+        if exclude_topic_id is None:
+            return connection.execute(
+                "SELECT id, topic, used, last_used FROM topics ORDER BY RANDOM() LIMIT 1"
+            ).fetchone()
+        return connection.execute(
+            "SELECT id, topic, used, last_used FROM topics "
+            "WHERE id != %s ORDER BY RANDOM() LIMIT 1",
+            (exclude_topic_id,),
+        ).fetchone()
+
+
 def get_random_practice_topic(
     exclude_topic_id: int | None = None,
 ) -> dict[str, Any] | None:

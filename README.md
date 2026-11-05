@@ -34,6 +34,6 @@ Endpoints include:
 
 - `GET /health`
 - `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`
-- `GET /topics`, `GET /topics/{topic_id}`, `GET /topic/today`
+- `GET /topics`, `GET /topics/{topic_id}`, `GET /topic/today`, `GET /topic/random`
 - `POST /essay/generate`, `GET /practice/prompt`, `POST /evaluate`, `POST /evaluate/essay`
 - `GET /progress`
